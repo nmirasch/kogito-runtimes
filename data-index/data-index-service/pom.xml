@@ -124,7 +124,7 @@
             </goals>
           </execution>
           <execution>
-            <id>testWitKeycloak</id>
+            <id>testWithKeycloak</id>
             <goals>
               <goal>test</goal>
             </goals>
@@ -136,7 +136,7 @@
                 <exclude>none</exclude>
               </excludes>
               <systemProperties>
-                <quarkus.oidc.enabled>true</quarkus.oidc.enabled>
+                <quarkus.profile>test</quarkus.profile>
               </systemProperties>
             </configuration>
           </execution>
