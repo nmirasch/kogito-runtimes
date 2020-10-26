@@ -59,25 +59,5 @@
       <artifactId>rest-assured</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
-  <!-- just for DEV, TO BE REMOVED -->
-    <build>
-    <plugins>
-      <plugin>
-        <groupId>io.quarkus</groupId>
-        <artifactId>quarkus-maven-plugin</artifactId>
-        <configuration>
-          <uberJar>true</uberJar>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-    </build>
 </project>

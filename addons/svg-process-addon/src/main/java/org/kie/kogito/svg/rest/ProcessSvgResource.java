@@ -31,23 +31,23 @@ import javax.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
-import org.kie.kogito.svg.service.ProcessSVGService;
+import org.kie.kogito.svg.service.ProcessSvgService;
 
 @Path("/svg")
-public class ProcessSVGResource {
+public class ProcessSvgResource {
 
     @Inject
-    ProcessSVGService service;
+    ProcessSvgService service;
 
     @Path("process/{processId}/instances/{processInstanceId}")
     @GET
     @Produces(MediaType.APPLICATION_SVG_XML)
-    public Uni<String> getSVGExecutionPathByProcessInstance(
+    public Uni<String> getSvgExecutionPathByProcessInstance(
             @PathParam("processId") String processId,
             @PathParam("processInstanceId") String processInstanceId) {
         Uni<HttpResponse<Buffer>> queryNodesUni = service.getNodesQueryUni(processId, processInstanceId);
-        Uni<String> getSvgUni = service.getSvgFileUni(processId);
-        getSvgUni.onFailure().recoverWithItem(service.getProcessSVGFromVertxFileSystem(processId));
+        Uni<String> getSvgUni = service.getSvgUni(processId);
+        getSvgUni.onFailure().recoverWithItem(service.getSvgFromVertxFileSystem(processId));
 
         List<Uni<?>> list = Arrays.asList(queryNodesUni, getSvgUni);
         return Uni.combine().all().unis(list).combinedWith(results -> processUnisCombinedResults(results));
@@ -56,11 +56,11 @@ public class ProcessSVGResource {
     protected String processUnisCombinedResults(List combinedResults) {
         List<String> completedNodes = new ArrayList<>();
         List<String> activeNodes = new ArrayList<>();
-        service.fillNodesArrays((HttpResponse<Buffer>) combinedResults.get(0), completedNodes, activeNodes);
-        return service.svgTransformToShowExecutedPath(((String) combinedResults.get(1)), completedNodes, activeNodes);
+        service.fillNodeArrays((HttpResponse<Buffer>) combinedResults.get(0), completedNodes, activeNodes);
+        return service.transformSvgToShowExecutedPath(((String) combinedResults.get(1)), completedNodes, activeNodes);
     }
 
-    protected void setProcessSVGService(ProcessSVGService service) {
+    protected void setProcessSvgService(ProcessSvgService service) {
         this.service = service;
     }
 }

@@ -56,7 +56,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
-public class ProcessSVGsServiceTest {
+public class ProcessSvgServiceTest {
 
     private final static String PROCESS_INSTANCE_ID = "piId";
     private final static String PROCESS_ID = "travels";
@@ -109,7 +109,7 @@ public class ProcessSVGsServiceTest {
             "  }\n" +
             "}";
 
-    private ProcessSVGService tested;
+    private ProcessSvgService tested;
 
     private Instance instanceMock;
     private Vertx vertxMock;
@@ -122,7 +122,7 @@ public class ProcessSVGsServiceTest {
         webClientMock = mock(WebClient.class);
         instanceMock = mock(Instance.class);
 
-        tested = spy(new ProcessSVGService(dataindexURL,
+        tested = spy(new ProcessSvgService(dataindexURL,
                                            "",
                                            "",
                                            "",
@@ -150,7 +150,7 @@ public class ProcessSVGsServiceTest {
 
     @Test
     public void testGetDataIndexWebclientOptions() {
-        ProcessSVGService testService = new ProcessSVGService(dataindexURL,
+        ProcessSvgService testService = new ProcessSvgService(dataindexURL,
                                                               "",
                                                               "",
                                                               "",
@@ -175,7 +175,7 @@ public class ProcessSVGsServiceTest {
         lenient().when(fileSystemMock.readFileBlocking(PROCESS_ID + ".svg")).thenReturn(bufferMock);
         lenient().when(bufferMock.toString(UTF_8)).thenReturn(fileContent);
 
-        String svgContent = tested.getProcessSVGFromVertxFileSystem(PROCESS_ID);
+        String svgContent = tested.getSvgFromVertxFileSystem(PROCESS_ID);
         assertThat(fileContent).isEqualTo(svgContent);
         verify(vertxMock).fileSystem();
         verify(fileSystemMock).readFileBlocking(PROCESS_ID + ".svg");
@@ -206,7 +206,7 @@ public class ProcessSVGsServiceTest {
         lenient().when(webClientMock.get("/diagram/" + PROCESS_ID + ".svg")).thenReturn(request);
         lenient().when(request.send()).thenReturn(tUni);
 
-        tested.getSvgFileUni(PROCESS_ID);
+        tested.getSvgUni(PROCESS_ID);
         verify(webClientMock).get("/diagram/" + PROCESS_ID + ".svg");
         verify(request).send();
     }
@@ -219,7 +219,7 @@ public class ProcessSVGsServiceTest {
         lenient().when(responseMock.statusCode()).thenReturn(200);
         lenient().when(responseMock.bodyAsString()).thenReturn(getTravelsSVGFile());
 
-        assertThat(tested.getSvgFileContent(responseMock,PROCESS_ID)).isEqualTo(getTravelsSVGFile());
+        assertThat(tested.getSvgContent(responseMock, PROCESS_ID)).isEqualTo(getTravelsSVGFile());
         verifyNoMoreInteractions(vertxMock);
     }
 
@@ -227,7 +227,7 @@ public class ProcessSVGsServiceTest {
     public void getSvgFileContentFailFromDataIndexTest() {
         Vertx vertxMock1 = mock(Vertx.class);
         String fileContent = "svg content";
-        ProcessSVGService testService = new ProcessSVGService(dataindexURL,
+        ProcessSvgService testService = new ProcessSvgService(dataindexURL,
                                                               "",
                                                               "",
                                                               "",
@@ -245,21 +245,21 @@ public class ProcessSVGsServiceTest {
         lenient().when(responseMock.statusCode()).thenReturn(200);
         lenient().when(responseMock.bodyAsString()).thenReturn("<title>404 - Resource Not Found</title>");
 
-        testService.getSvgFileContent(responseMock,PROCESS_ID);
+        testService.getSvgContent(responseMock, PROCESS_ID);
         verify(vertxMock1).fileSystem();
     }
 
     @Test
     public void svgTransformToShowExecutedPathTest() {
-        assertThat(tested.svgTransformToShowExecutedPath(
+        assertThat(tested.transformSvgToShowExecutedPath(
                 getTravelsSVGFile(),
                 Arrays.asList("_1A708F87-11C0-42A0-A464-0B7E259C426F"),
                 Collections.emptyList())).isNotEqualTo("SVG Not processed");
-        assertThat(tested.svgTransformToShowExecutedPath(
+        assertThat(tested.transformSvgToShowExecutedPath(
                 null,
                 Arrays.asList("_1A708F87-11C0-42A0-A464-0B7E259C426F"),
                 Collections.emptyList())).isEqualTo("SVG Not processed");
-        assertThat(tested.svgTransformToShowExecutedPath(
+        assertThat(tested.transformSvgToShowExecutedPath(
                 getTravelsSVGFile(),
                 Collections.emptyList(),
                 Collections.emptyList())).isEqualTo(getTravelsSVGFile());
@@ -274,7 +274,7 @@ public class ProcessSVGsServiceTest {
         lenient().when(response.statusCode()).thenReturn(200);
         lenient().when(response.bodyAsJsonObject()).thenReturn(new JsonObject(jsonString));
 
-        tested.fillNodesArrays(response, completedNodes, activedNodes);
+        tested.fillNodeArrays(response, completedNodes, activedNodes);
 
         assertThat(completedNodes.size()).isEqualTo(8);
         assertThat(activedNodes.size()).isEqualTo(1);
@@ -292,5 +292,4 @@ public class ProcessSVGsServiceTest {
         Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
         return new String(Files.readAllBytes(path));
     }
-
 }

@@ -48,9 +48,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
-public class ProcessSVGService {
+public class ProcessSvgService {
+    public static final int RESPONSE_STATUS_CODE_OK = 200;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessSVGService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessSvgService.class);
 
     private Vertx vertx;
 
@@ -64,7 +65,7 @@ public class ProcessSVGService {
     private String activeBorderColor;
 
     @Inject
-    public ProcessSVGService(
+    public ProcessSvgService(
             @ConfigProperty(name = "kogito.dataindex.http.url", defaultValue = "http://localhost:8180") String dataIndexHttpURL,
             @ConfigProperty(name = "kogito.svg.resources.path", defaultValue = "META-INF/processSVG/") String svgResourcesPath,
             @ConfigProperty(name = "kogito.svg.color.completed", defaultValue = "#C0C0C0") String completedColor,
@@ -100,7 +101,7 @@ public class ProcessSVGService {
         this.client = client;
     }
 
-    public String getProcessSVGFromVertxFileSystem(String processId) {
+    public String getSvgFromVertxFileSystem(String processId) {
         return vertx.fileSystem()
                 .readFileBlocking(svgResourcesPath + processId + ".svg")
                 .toString(UTF_8);
@@ -112,22 +113,22 @@ public class ProcessSVGService {
                 .sendJson(JsonObject.mapFrom(Collections.singletonMap("query", query)));
     }
 
-    public Uni<String> getSvgFileUni(String processId) {
+    public Uni<String> getSvgUni(String processId) {
         return getClient().get("/diagram/" + processId + ".svg")
                 .send()
-                .map(resp -> getSvgFileContent(resp, processId));
+                .map(resp -> getSvgContent(resp, processId));
     }
 
-    protected String getSvgFileContent(HttpResponse<Buffer> resp, String processId) {
+    protected String getSvgContent(HttpResponse<Buffer> resp, String processId) {
         if (resp != null &&
                 resp.bodyAsString() != null &&
                 !resp.bodyAsString().contains("<title>404 - Resource Not Found</title>")) {
             return resp.bodyAsString();
         }
-        return getProcessSVGFromVertxFileSystem(processId);
+        return getSvgFromVertxFileSystem(processId);
     }
 
-    public String svgTransformToShowExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes) {
+    public String transformSvgToShowExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes) {
         if (svg != null) {
             if (!(completedNodes.isEmpty() && activeNodes.isEmpty())) {
                 InputStream svgStream = new ByteArrayInputStream(svg.getBytes());
@@ -143,8 +144,8 @@ public class ProcessSVGService {
         }
     }
 
-    public void fillNodesArrays(HttpResponse<Buffer> response, List<String> completedNodes, List<String> activeNodes) {
-        if (response.statusCode() == 200) {
+    public void fillNodeArrays(HttpResponse<Buffer> response, List<String> completedNodes, List<String> activeNodes) {
+        if (response.statusCode() == RESPONSE_STATUS_CODE_OK) {
             JsonArray pInstancesArray = response.bodyAsJsonObject().getJsonObject("data")
                     .getJsonArray("ProcessInstances");
             if (pInstancesArray != null && !pInstancesArray.isEmpty()) {

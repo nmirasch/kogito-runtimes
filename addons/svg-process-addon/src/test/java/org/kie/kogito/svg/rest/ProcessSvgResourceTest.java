@@ -23,8 +23,8 @@ import io.vertx.mutiny.ext.web.client.HttpResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.kie.kogito.svg.service.ProcessSVGService;
-import org.kie.kogito.svg.service.ProcessSVGsServiceTest;
+import org.kie.kogito.svg.service.ProcessSvgService;
+import org.kie.kogito.svg.service.ProcessSvgServiceTest;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -33,42 +33,43 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ProcessSVGResourceTest {
+class ProcessSvgResourceTest {
 
     private final static String PROCESS_INSTANCE_ID = "piId";
     private final static String PROCESS_ID = "travels";
 
-    private ProcessSVGResource processSVGResourceTest;
-    private ProcessSVGService processSVGServiceMock;
+    private ProcessSvgResource processSvgResourceTest;
+    private ProcessSvgService processSvgServiceMock;
     private HttpResponse responseMock;
     private String svgFileContent;
 
     @BeforeAll
     public void setup() {
-        processSVGResourceTest = new ProcessSVGResource();
-        processSVGServiceMock = mock(ProcessSVGService.class);
+        processSvgResourceTest = new ProcessSvgResource();
+        processSvgServiceMock = mock(ProcessSvgService.class);
         responseMock = mock(HttpResponse.class);
         svgFileContent = "svg";
-        processSVGResourceTest.setProcessSVGService(processSVGServiceMock);
+        processSvgResourceTest.setProcessSvgService(processSvgServiceMock);
 
-        lenient().when(processSVGServiceMock.getSvgFileUni(PROCESS_ID))
-                .thenReturn(Uni.createFrom().item(ProcessSVGsServiceTest.getTravelsSVGFile()));
-        lenient().when(processSVGServiceMock.getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID))
+        lenient().when(processSvgServiceMock.getSvgUni(PROCESS_ID))
+                .thenReturn(Uni.createFrom().item(ProcessSvgServiceTest.getTravelsSVGFile()));
+        lenient().when(processSvgServiceMock.getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID))
                 .thenReturn(Uni.createFrom().item(responseMock));
     }
 
     @Test
     void getSVGExecutionPathByProcessInstanceTest() {
-        processSVGResourceTest.getSVGExecutionPathByProcessInstance(PROCESS_ID, PROCESS_INSTANCE_ID);
+        processSvgResourceTest.getSvgExecutionPathByProcessInstance(PROCESS_ID, PROCESS_INSTANCE_ID);
 
-        verify(processSVGServiceMock).getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID);
-        verify(processSVGServiceMock).getSvgFileUni(PROCESS_ID);
+        verify(processSvgServiceMock).getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID);
+        verify(processSvgServiceMock).getSvgUni(PROCESS_ID);
     }
 
     @Test
     void getProcessUnisCombinedResultsTest() throws Exception {
-        processSVGResourceTest.processUnisCombinedResults(Arrays.asList(responseMock, svgFileContent));
-        verify(processSVGServiceMock).fillNodesArrays(eq(responseMock), anyList(), anyList());
-        verify(processSVGServiceMock).svgTransformToShowExecutedPath(eq(svgFileContent), anyList(), anyList());
+        processSvgResourceTest.processUnisCombinedResults(Arrays.asList(responseMock, svgFileContent));
+
+        verify(processSvgServiceMock).fillNodeArrays(eq(responseMock), anyList(), anyList());
+        verify(processSvgServiceMock).transformSvgToShowExecutedPath(eq(svgFileContent), anyList(), anyList());
     }
 }
