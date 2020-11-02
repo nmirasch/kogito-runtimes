@@ -42,12 +42,14 @@ public class QuarkusProcessSvgService extends ProcessSvgService {
             @ConfigProperty(name = "kogito.svg.color.completed", defaultValue = "#C0C0C0") String completedColor,
             @ConfigProperty(name = "kogito.svg.color.completed.border", defaultValue = "#030303") String completedBorderColor,
             @ConfigProperty(name = "kogito.svg.color.active.border", defaultValue = "#FF0000") String activeBorderColor,
+            Vertx vertx,
             Instance<WebClient> providedWebClient) {
         this.dataIndexHttpURL = dataIndexHttpURL;
         this.svgResourcesPath = svgResourcesPath;
         this.completedColor = completedColor;
         this.completedBorderColor = completedBorderColor;
         this.activeBorderColor = activeBorderColor;
+        this.vertx = vertx;
         this.providedWebClient = providedWebClient;
     }
 

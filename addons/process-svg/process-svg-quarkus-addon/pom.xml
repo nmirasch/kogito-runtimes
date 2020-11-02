@@ -8,9 +8,9 @@
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>process-svg-quarkus-addon</artifactId>
-  <name>Kogito :: Add-Ons :: Process svg :: Quarkus Addon</name>
+  <name>Kogito :: Add-Ons :: Process SVG :: Quarkus Addon</name>
 
-  <description>Process svg Quarkus Addon to interact with Process Svg Service</description>
+  <description>Quarkus Addon to interact with Process SVG Service</description>
 
   <dependencies>
     <dependency>
@@ -18,12 +18,12 @@
       <artifactId>process-svg-common</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-vertx-web</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-mutiny</artifactId>
     </dependency>
 
     <!-- test dependencies -->

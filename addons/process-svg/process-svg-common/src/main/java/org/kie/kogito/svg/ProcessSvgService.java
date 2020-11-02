@@ -33,6 +33,7 @@ import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 
 import org.jbpm.process.svg.SVGImageProcessor;
@@ -41,7 +42,6 @@ import org.jbpm.process.svg.processor.SVGProcessor;
 
 public abstract class ProcessSvgService {
     public static final int RESPONSE_STATUS_CODE_OK = 200;
-
     protected WebClient dataIndexWebClient;
     protected WebClient addonWebClient;
 
@@ -50,10 +50,7 @@ public abstract class ProcessSvgService {
     protected String completedColor;
     protected String completedBorderColor;
     protected String activeBorderColor;
-
-    public String getSvgResourcesPath() {
-        return svgResourcesPath;
-    }
+    protected Vertx vertx;
 
     public WebClient getDataIndexWebClient() {
         return dataIndexWebClient;
@@ -80,6 +77,12 @@ public abstract class ProcessSvgService {
                 .sendJson(JsonObject.mapFrom(Collections.singletonMap("query", query)));
     }
 
+    public String getSvgFromVertxFileSystem(String processId) {
+     return vertx.fileSystem()
+             .readFileBlocking(svgResourcesPath + "/"+ processId + ".svg")
+             .toString(UTF_8);
+    }
+
     public Uni<String> getSvgUni(String processId, RoutingContext context) {
         return getAddonWebClient(context).get("/diagram/" + processId + ".svg")
                 .send()
@@ -95,14 +98,18 @@ public abstract class ProcessSvgService {
         return "";
     }
 
-    public String transformSvgToShowExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes)  {
+    public String annotateExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes)  {
         if (svg != null && !svg.isEmpty()) {
             if (!(completedNodes.isEmpty() && activeNodes.isEmpty())) {
-                InputStream svgStream = new ByteArrayInputStream(svg.getBytes());
-                SVGProcessor processor = new SVGImageProcessor(svgStream).getProcessor();
-                completedNodes.stream().forEach(nodeId -> processor.defaultCompletedTransformation(nodeId, completedColor, completedBorderColor));
-                activeNodes.stream().forEach(nodeId -> processor.defaultActiveTransformation(nodeId, activeBorderColor));
-                return processor.getSVG();
+                try {
+                    InputStream svgStream = new ByteArrayInputStream(svg.getBytes());
+                    SVGProcessor processor = new SVGImageProcessor(svgStream).getProcessor();
+                    completedNodes.forEach(nodeId -> processor.defaultCompletedTransformation(nodeId, completedColor, completedBorderColor));
+                    activeNodes.forEach(nodeId -> processor.defaultActiveTransformation(nodeId, activeBorderColor));
+                    return processor.getSVG();
+                } catch (Exception e){
+                    return svg;
+                }
             } else {
                 return svg;
             }
@@ -117,8 +124,7 @@ public abstract class ProcessSvgService {
                     .getJsonArray("ProcessInstances");
             if (pInstancesArray != null && !pInstancesArray.isEmpty()) {
                 JsonArray nodesArray = pInstancesArray.getJsonObject(0).getJsonArray("nodes");
-                nodesArray.stream()
-                        .forEach(node -> {
+                nodesArray.forEach(node -> {
                             if (isNull(((JsonObject) node).getInstant("exit"))) {
                                 activeNodes.add(((JsonObject) node).getString("definitionId"));
                             } else {

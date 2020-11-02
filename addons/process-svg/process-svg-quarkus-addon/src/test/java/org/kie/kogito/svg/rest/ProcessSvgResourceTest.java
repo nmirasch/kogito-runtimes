@@ -21,16 +21,13 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.kie.kogito.svg.service.QuarkusProcessSvgService;
-import org.kie.kogito.svg.service.QuarkusProcessSvgServiceTest;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -66,21 +63,8 @@ class ProcessSvgResourceTest {
 
     @Test
     void getSVGExecutionPathByProcessInstanceTest() {
-        RoutingContext routingContextMock = mock(RoutingContext.class);
-        lenient().when(routingContextMock.pathParam("processId")).thenReturn(PROCESS_ID);
-        lenient().when(routingContextMock.pathParam("processInstanceId")).thenReturn(PROCESS_INSTANCE_ID);
-        processSvgResourceTest.getSvgExecutionPathByProcessInstance(routingContextMock);
-
+        processSvgResourceTest.getExecutionPathByProcessInstanceId(PROCESS_ID, PROCESS_INSTANCE_ID);
         verify(processSvgServiceMock).getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID);
-        verify(processSvgServiceMock).getSvgUni(PROCESS_ID, routingContextMock);
-    }
-
-    @Test
-    void getProcessUnisCombinedResultsTest() throws Exception {
-        processSvgResourceTest.processUnisCombinedResults(Arrays.asList(responseMock, svgFileContent));
-
-        verify(processSvgServiceMock).fillNodeArrays(eq(responseMock), anyList(), anyList());
-        verify(processSvgServiceMock).transformSvgToShowExecutedPath(eq(svgFileContent), anyList(), anyList());
     }
 
     public String getTravelsSVGFile() {

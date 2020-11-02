@@ -8,7 +8,7 @@
   <artifactId>process-svg</artifactId>
   <packaging>pom</packaging>
   <name>Kogito :: Add-Ons :: Process svg</name>
-  <description>Process Svg showing execution path</description>
+  <description>Process SVG showing execution path</description>
   <modules>
     <module>process-svg-common</module>
     <module>process-svg-quarkus-addon</module>

@@ -26,7 +26,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>process-svg-common</artifactId>
-  <name>Kogito :: Add-Ons :: process-svg :: Common</name>
+  <name>Kogito :: Add-Ons :: process SVG :: Common</name>
 
   <dependencies>
     <dependency>

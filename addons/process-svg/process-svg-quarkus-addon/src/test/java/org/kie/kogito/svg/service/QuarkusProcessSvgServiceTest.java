@@ -18,6 +18,7 @@ package org.kie.kogito.svg.service;
 
 import javax.enterprise.inject.Instance;
 
+import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,21 +39,23 @@ import static org.mockito.Mockito.verify;
 public class QuarkusProcessSvgServiceTest extends ProcessSvgServiceTest {
 
     private QuarkusProcessSvgService tested;
-
+    //private Vertx vertxMock;
     private Instance instanceMock;
     private WebClient webClientMock;
-    private String dataIndexURL = "http://localhost:8180";
+    //private String dataIndexURL = "http://localhost:8180";
 
     @BeforeAll
     public void setup() {
         webClientMock = mock(WebClient.class);
         instanceMock = mock(Instance.class);
+        vertxMock = mock(Vertx.class);
 
         tested = spy(new QuarkusProcessSvgService(dataIndexURL,
                                                   "",
                                                   "",
                                                   "",
                                                   "",
+                                                  vertxMock,
                                                   instanceMock
         ));
         tested.setAddonWebClient(webClientMock);

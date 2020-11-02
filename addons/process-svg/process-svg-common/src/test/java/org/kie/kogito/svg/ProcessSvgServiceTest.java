@@ -30,12 +30,15 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.core.file.FileSystem;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.junit.jupiter.api.Test;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -44,7 +47,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 public abstract class ProcessSvgServiceTest {
-
     private final static String PROCESS_INSTANCE_ID = "piId";
     private final static String PROCESS_ID = "travels";
     private final static String jsonString = "{\n" +
@@ -95,6 +97,9 @@ public abstract class ProcessSvgServiceTest {
             "    ]\n" +
             "  }\n" +
             "}";
+
+    protected Vertx vertxMock;
+    protected String dataIndexURL = "http://localhost:8180";
 
     @Test
     public void getWebClientOptionsTest() {
@@ -151,18 +156,34 @@ public abstract class ProcessSvgServiceTest {
 
         assertThat(getTestedProcessSvgService().getSvgContent(responseMock)).isEqualTo(getTravelsSVGFile());
     }
+    @Test
+    public void getProcessSVGFromVertxFileSystemTest() {
+        FileSystem fileSystemMock = mock(FileSystem.class);
+        Buffer bufferMock = mock(Buffer.class);
+        String fileContent = getTravelsSVGFile();
+
+        lenient().when(vertxMock.fileSystem()).thenReturn(fileSystemMock);
+        lenient().when(fileSystemMock.readFileBlocking("/" + PROCESS_ID + ".svg")).thenReturn(bufferMock);
+        lenient().when(bufferMock.toString(UTF_8)).thenReturn(fileContent);
+
+        String svgContent = getTestedProcessSvgService().getSvgFromVertxFileSystem(PROCESS_ID);
+        assertThat(fileContent).isEqualTo(svgContent);
+        verify(vertxMock).fileSystem();
+        verify(fileSystemMock).readFileBlocking("/" + PROCESS_ID + ".svg");
+        verify(bufferMock).toString(UTF_8);
+    }
 
     @Test
-    public void svgTransformToShowExecutedPathTest() {
-        assertThat(getTestedProcessSvgService().transformSvgToShowExecutedPath(
+    public void annotateExecutedPathTest() {
+        assertThat(getTestedProcessSvgService().annotateExecutedPath(
                 getTravelsSVGFile(),
                 Arrays.asList("_1A708F87-11C0-42A0-A464-0B7E259C426F"),
                 Collections.emptyList())).isNotEqualTo("SVG Not processed");
-        assertThat(getTestedProcessSvgService().transformSvgToShowExecutedPath(
+        assertThat(getTestedProcessSvgService().annotateExecutedPath(
                 null,
                 Arrays.asList("_1A708F87-11C0-42A0-A464-0B7E259C426F"),
                 Collections.emptyList())).isEmpty();
-        assertThat(getTestedProcessSvgService().transformSvgToShowExecutedPath(
+        assertThat(getTestedProcessSvgService().annotateExecutedPath(
                 getTravelsSVGFile(),
                 Collections.emptyList(),
                 Collections.emptyList())).isEqualTo(getTravelsSVGFile());

@@ -17,52 +17,42 @@
 package org.kie.kogito.svg.rest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-import io.quarkus.vertx.web.Route;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import org.kie.kogito.svg.service.QuarkusProcessSvgService;
 
 @ApplicationScoped
+@Path("/svg/")
 public class ProcessSvgResource {
 
     @Inject
     QuarkusProcessSvgService service;
 
-    public void setupRouter(@Observes Router router) {
-        StaticHandler diagramHandler = StaticHandler.create();
-        diagramHandler.setAllowRootFileSystemAccess(true);
-        diagramHandler.setWebRoot(service.getSvgResourcesPath());
-        router.route("/diagram/*").handler(diagramHandler);
-    }
-
-    @Route(path = "/svg/process/:processId/instances/:processInstanceId", methods = HttpMethod.GET, produces = "application/svg+xml")
-    public Uni<String> getSvgExecutionPathByProcessInstance(RoutingContext context) {
-        String processId = context.pathParam("processId");
-        String processInstanceId = context.pathParam("processInstanceId");
+    @Path("processes/{processId}/instances/{processInstanceId}")
+    @GET
+    @Produces(MediaType.APPLICATION_SVG_XML)
+    public Uni<String> getExecutionPathByProcessInstanceId(
+            @PathParam("processId") String processId,
+            @PathParam("processInstanceId") String processInstanceId) {
         Uni<HttpResponse<Buffer>> queryNodesUni = service.getNodesQueryUni(processId, processInstanceId);
-        Uni<String> getSvgUni = service.getSvgUni(processId, context);
-
-        List<Uni<?>> list = Arrays.asList(queryNodesUni, getSvgUni);
-        return Uni.combine().all().unis(list).combinedWith(results -> processUnisCombinedResults(results));
-    }
-
-    protected String processUnisCombinedResults(List combinedResults) {
-        List<String> completedNodes = new ArrayList<>();
-        List<String> activeNodes = new ArrayList<>();
-        service.fillNodeArrays((HttpResponse<Buffer>) combinedResults.get(0), completedNodes, activeNodes);
-        return service.transformSvgToShowExecutedPath(((String) combinedResults.get(1)), completedNodes, activeNodes);
+        String svg = service.getSvgFromVertxFileSystem(processId);
+        return queryNodesUni.onItem().transform(queryResults -> {
+            List<String> completedNodes = new ArrayList<>();
+            List<String> activeNodes = new ArrayList<>();
+            service.fillNodeArrays(queryResults, completedNodes, activeNodes);
+            return service.annotateExecutedPath(svg, completedNodes, activeNodes);
+        });
     }
 
     protected void setProcessSvgService(QuarkusProcessSvgService service) {
