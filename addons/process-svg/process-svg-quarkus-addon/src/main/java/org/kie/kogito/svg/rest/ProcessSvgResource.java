@@ -16,9 +16,6 @@
 
 package org.kie.kogito.svg.rest;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -28,16 +25,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.ext.web.client.HttpResponse;
-import org.kie.kogito.svg.service.QuarkusProcessSvgService;
+import org.kie.kogito.svg.ProcessSvgService;
 
 @ApplicationScoped
 @Path("/svg/")
 public class ProcessSvgResource {
 
     @Inject
-    QuarkusProcessSvgService service;
+    ProcessSvgService service;
+
+    @Path("processes/{processId}")
+    @GET
+    @Produces(MediaType.APPLICATION_SVG_XML)
+    public String getProcessSvg(
+            @PathParam("processId") String processId) {
+        return service.getProcessSvg(processId);
+    }
 
     @Path("processes/{processId}/instances/{processInstanceId}")
     @GET
@@ -45,17 +48,10 @@ public class ProcessSvgResource {
     public Uni<String> getExecutionPathByProcessInstanceId(
             @PathParam("processId") String processId,
             @PathParam("processInstanceId") String processInstanceId) {
-        Uni<HttpResponse<Buffer>> queryNodesUni = service.getNodesQueryUni(processId, processInstanceId);
-        String svg = service.getSvgFromVertxFileSystem(processId);
-        return queryNodesUni.onItem().transform(queryResults -> {
-            List<String> completedNodes = new ArrayList<>();
-            List<String> activeNodes = new ArrayList<>();
-            service.fillNodeArrays(queryResults, completedNodes, activeNodes);
-            return service.annotateExecutedPath(svg, completedNodes, activeNodes);
-        });
+        return service.getProcessInstanceSvg(processId, processInstanceId);
     }
 
-    protected void setProcessSvgService(QuarkusProcessSvgService service) {
+    protected void setProcessSvgService(ProcessSvgService service) {
         this.service = service;
     }
 }

@@ -20,31 +20,33 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import org.jbpm.process.svg.SVGImageProcessor;
+import org.jbpm.process.svg.processor.SVGProcessor;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 
-import org.jbpm.process.svg.SVGImageProcessor;
-import org.jbpm.process.svg.processor.SVGProcessor;
-
-
 public abstract class ProcessSvgService {
+
     public static final int RESPONSE_STATUS_CODE_OK = 200;
+    private static Path svgDir = Paths.get("META-INF", "processSVG");
     protected WebClient dataIndexWebClient;
     protected WebClient addonWebClient;
-
     protected String dataIndexHttpURL;
     protected String svgResourcesPath;
     protected String completedColor;
@@ -60,13 +62,6 @@ public abstract class ProcessSvgService {
         this.dataIndexWebClient = dataIndexWebClient;
     }
 
-    public WebClient getAddonWebClient(RoutingContext context) {
-        if(addonWebClient == null ){
-            setAddonWebClient(WebClient.create(Vertx.vertx(),  getWebClientToURLOptions(context.request().absoluteURI())));
-        }
-        return addonWebClient;
-    }
-
     public void setAddonWebClient(WebClient addonWebClient) {
         this.addonWebClient = addonWebClient;
     }
@@ -77,28 +72,26 @@ public abstract class ProcessSvgService {
                 .sendJson(JsonObject.mapFrom(Collections.singletonMap("query", query)));
     }
 
-    public String getSvgFromVertxFileSystem(String processId) {
-     return vertx.fileSystem()
-             .readFileBlocking(svgResourcesPath + "/"+ processId + ".svg")
-             .toString(UTF_8);
-    }
-
-    public Uni<String> getSvgUni(String processId, RoutingContext context) {
-        return getAddonWebClient(context).get("/diagram/" + processId + ".svg")
-                .send()
-                .map(resp -> getSvgContent(resp));
-    }
-
-    protected String getSvgContent(HttpResponse<Buffer> resp) {
-        if (resp != null &&
-                resp.bodyAsString() != null &&
-                !resp.bodyAsString().contains("<title>404 - Resource Not Found</title>")) {
-            return resp.bodyAsString();
+    public String getProcessSvg(String processId) {
+        try {
+            return vertx.fileSystem()
+                    .readFileBlocking(svgResourcesPath + "/" + processId + ".svg")
+                    .toString(UTF_8);
+        } catch (Exception exception) {
+            return readFileContentFromClassPath(processId + ".svg");
         }
-        return "";
     }
 
-    public String annotateExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes)  {
+    private String readFileContentFromClassPath(String fileName) {
+        try {
+            Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(fileName).toURI());
+            return new String(Files.readAllBytes(path));
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public String annotateExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes) {
         if (svg != null && !svg.isEmpty()) {
             if (!(completedNodes.isEmpty() && activeNodes.isEmpty())) {
                 try {
@@ -107,14 +100,14 @@ public abstract class ProcessSvgService {
                     completedNodes.forEach(nodeId -> processor.defaultCompletedTransformation(nodeId, completedColor, completedBorderColor));
                     activeNodes.forEach(nodeId -> processor.defaultActiveTransformation(nodeId, activeBorderColor));
                     return processor.getSVG();
-                } catch (Exception e){
+                } catch (Exception e) {
                     return svg;
                 }
             } else {
                 return svg;
             }
         } else {
-            return  "";
+            return "";
         }
     }
 
@@ -125,12 +118,12 @@ public abstract class ProcessSvgService {
             if (pInstancesArray != null && !pInstancesArray.isEmpty()) {
                 JsonArray nodesArray = pInstancesArray.getJsonObject(0).getJsonArray("nodes");
                 nodesArray.forEach(node -> {
-                            if (isNull(((JsonObject) node).getInstant("exit"))) {
-                                activeNodes.add(((JsonObject) node).getString("definitionId"));
-                            } else {
-                                completedNodes.add(((JsonObject) node).getString("definitionId"));
-                            }
-                        });
+                    if (isNull(((JsonObject) node).getInstant("exit"))) {
+                        activeNodes.add(((JsonObject) node).getString("definitionId"));
+                    } else {
+                        completedNodes.add(((JsonObject) node).getString("definitionId"));
+                    }
+                });
             }
         }
     }
@@ -147,4 +140,14 @@ public abstract class ProcessSvgService {
         return null;
     }
 
+    public Uni<String> getProcessInstanceSvg(String processId, String processInstanceId) {
+        Uni<HttpResponse<Buffer>> queryNodesUni = getNodesQueryUni(processId, processInstanceId);
+        String svg = getProcessSvg(processId);
+        return queryNodesUni.onItem().transform(queryResults -> {
+            List<String> completedNodes = new ArrayList<>();
+            List<String> activeNodes = new ArrayList<>();
+            fillNodeArrays(queryResults, completedNodes, activeNodes);
+            return annotateExecutedPath(svg, completedNodes, activeNodes);
+        });
+    }
 }

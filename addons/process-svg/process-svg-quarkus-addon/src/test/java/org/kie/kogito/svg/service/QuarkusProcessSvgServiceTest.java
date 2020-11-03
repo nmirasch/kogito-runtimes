@@ -39,10 +39,8 @@ import static org.mockito.Mockito.verify;
 public class QuarkusProcessSvgServiceTest extends ProcessSvgServiceTest {
 
     private QuarkusProcessSvgService tested;
-    //private Vertx vertxMock;
     private Instance instanceMock;
     private WebClient webClientMock;
-    //private String dataIndexURL = "http://localhost:8180";
 
     @BeforeAll
     public void setup() {

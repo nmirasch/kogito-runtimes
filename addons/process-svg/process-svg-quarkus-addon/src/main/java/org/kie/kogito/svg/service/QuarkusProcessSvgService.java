@@ -38,7 +38,7 @@ public class QuarkusProcessSvgService extends ProcessSvgService {
     @Inject
     public QuarkusProcessSvgService(
             @ConfigProperty(name = "kogito.dataindex.http.url", defaultValue = "http://localhost:8180") String dataIndexHttpURL,
-            @ConfigProperty(name = "kogito.svg-diagram.folder.path", defaultValue = "META-INF/processSVG/") String svgResourcesPath,
+            @ConfigProperty(name = "kogito.svg.folder.path", defaultValue = "META-INF/processSVG/") String svgResourcesPath,
             @ConfigProperty(name = "kogito.svg.color.completed", defaultValue = "#C0C0C0") String completedColor,
             @ConfigProperty(name = "kogito.svg.color.completed.border", defaultValue = "#030303") String completedBorderColor,
             @ConfigProperty(name = "kogito.svg.color.active.border", defaultValue = "#FF0000") String activeBorderColor,

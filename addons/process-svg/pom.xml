@@ -7,7 +7,7 @@
   </parent>
   <artifactId>process-svg</artifactId>
   <packaging>pom</packaging>
-  <name>Kogito :: Add-Ons :: Process svg</name>
+  <name>Kogito :: Add-Ons :: Process SVG</name>
   <description>Process SVG showing execution path</description>
   <modules>
     <module>process-svg-common</module>

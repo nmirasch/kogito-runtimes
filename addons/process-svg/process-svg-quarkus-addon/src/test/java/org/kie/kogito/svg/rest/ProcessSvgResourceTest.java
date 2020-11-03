@@ -29,9 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.kie.kogito.svg.service.QuarkusProcessSvgService;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -45,18 +42,19 @@ class ProcessSvgResourceTest {
     private ProcessSvgResource processSvgResourceTest;
     private QuarkusProcessSvgService processSvgServiceMock;
     private HttpResponse responseMock;
-    private String svgFileContent;
+
+    public static String readFileContent(String file) throws URISyntaxException, IOException {
+        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
+        return new String(Files.readAllBytes(path));
+    }
 
     @BeforeAll
     public void setup() {
         processSvgResourceTest = new ProcessSvgResource();
         processSvgServiceMock = mock(QuarkusProcessSvgService.class);
         responseMock = mock(HttpResponse.class);
-        svgFileContent = "svg";
         processSvgResourceTest.setProcessSvgService(processSvgServiceMock);
 
-        lenient().when(processSvgServiceMock.getSvgUni(eq(PROCESS_ID), any()))
-                .thenReturn(Uni.createFrom().item(getTravelsSVGFile()));
         lenient().when(processSvgServiceMock.getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID))
                 .thenReturn(Uni.createFrom().item(responseMock));
     }
@@ -64,10 +62,10 @@ class ProcessSvgResourceTest {
     @Test
     void getSVGExecutionPathByProcessInstanceTest() {
         processSvgResourceTest.getExecutionPathByProcessInstanceId(PROCESS_ID, PROCESS_INSTANCE_ID);
-        verify(processSvgServiceMock).getNodesQueryUni(PROCESS_ID, PROCESS_INSTANCE_ID);
+        verify(processSvgServiceMock).getProcessInstanceSvg(PROCESS_ID, PROCESS_INSTANCE_ID);
     }
-
-    public String getTravelsSVGFile() {
+/*
+    public String getTravelsSvgFile() {
         try {
             return readFileContent("travels.svg");
         } catch (Exception e) {
@@ -75,9 +73,5 @@ class ProcessSvgResourceTest {
         }
     }
 
-    public static String readFileContent(String file) throws URISyntaxException, IOException {
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
-        return new String(Files.readAllBytes(path));
-    }
-
+ */
 }

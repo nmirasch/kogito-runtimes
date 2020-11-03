@@ -28,7 +28,6 @@ import java.util.List;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
@@ -47,6 +46,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 public abstract class ProcessSvgServiceTest {
+
     private final static String PROCESS_INSTANCE_ID = "piId";
     private final static String PROCESS_ID = "travels";
     private final static String jsonString = "{\n" +
@@ -101,6 +101,11 @@ public abstract class ProcessSvgServiceTest {
     protected Vertx vertxMock;
     protected String dataIndexURL = "http://localhost:8180";
 
+    public static String readFileContent(String file) throws URISyntaxException, IOException {
+        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
+        return new String(Files.readAllBytes(path));
+    }
+
     @Test
     public void getWebClientOptionsTest() {
         ProcessSvgService testService = spy(ProcessSvgService.class);
@@ -129,35 +134,7 @@ public abstract class ProcessSvgServiceTest {
     }
 
     @Test
-    public void getSvgFileUniTest() {
-        HttpRequest<Buffer> request = mock(HttpRequest.class);
-        Uni<HttpResponse<Buffer>> tUni = mock(Uni.class);
-        WebClient webClientMock = mock(WebClient.class);
-        RoutingContext routingContextMock = mock(RoutingContext.class);
-
-        getTestedProcessSvgService().setAddonWebClient(webClientMock);
-
-        lenient().when(webClientMock.get("/diagram/" + PROCESS_ID + ".svg")).thenReturn(request);
-        lenient().when(request.send()).thenReturn(tUni);
-
-        getTestedProcessSvgService().getSvgUni(PROCESS_ID, routingContextMock);
-        verify(webClientMock).get("/diagram/" + PROCESS_ID + ".svg");
-        verify(request).send();
-    }
-
-    @Test
-    public void getSvgFileContentSuccessTest() {
-        HttpResponse responseMock = mock(HttpResponse.class);
-        WebClient webClientMock = mock(WebClient.class);
-        getTestedProcessSvgService().setAddonWebClient(webClientMock);
-
-        lenient().when(responseMock.statusCode()).thenReturn(200);
-        lenient().when(responseMock.bodyAsString()).thenReturn(getTravelsSVGFile());
-
-        assertThat(getTestedProcessSvgService().getSvgContent(responseMock)).isEqualTo(getTravelsSVGFile());
-    }
-    @Test
-    public void getProcessSVGFromVertxFileSystemTest() {
+    public void getProcessSVGFromVertxFileSystemTest() throws Exception {
         FileSystem fileSystemMock = mock(FileSystem.class);
         Buffer bufferMock = mock(Buffer.class);
         String fileContent = getTravelsSVGFile();
@@ -166,7 +143,7 @@ public abstract class ProcessSvgServiceTest {
         lenient().when(fileSystemMock.readFileBlocking("/" + PROCESS_ID + ".svg")).thenReturn(bufferMock);
         lenient().when(bufferMock.toString(UTF_8)).thenReturn(fileContent);
 
-        String svgContent = getTestedProcessSvgService().getSvgFromVertxFileSystem(PROCESS_ID);
+        String svgContent = getTestedProcessSvgService().getProcessSvg(PROCESS_ID);
         assertThat(fileContent).isEqualTo(svgContent);
         verify(vertxMock).fileSystem();
         verify(fileSystemMock).readFileBlocking("/" + PROCESS_ID + ".svg");
@@ -210,11 +187,6 @@ public abstract class ProcessSvgServiceTest {
         } catch (Exception e) {
             return "No svg found";
         }
-    }
-
-    public static String readFileContent(String file) throws URISyntaxException, IOException {
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
-        return new String(Files.readAllBytes(path));
     }
 
     protected abstract ProcessSvgService getTestedProcessSvgService();

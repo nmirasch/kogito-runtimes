@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>process-svg-common</artifactId>
-       <type>test-jar</type>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
