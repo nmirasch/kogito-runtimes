@@ -19,6 +19,7 @@ package org.kie.kogito.svg;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import io.vertx.mutiny.core.file.FileSystem;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -101,9 +103,9 @@ public abstract class ProcessSvgServiceTest {
     protected Vertx vertxMock;
     protected String dataIndexURL = "http://localhost:8180";
 
-    public static String readFileContent(String file) throws URISyntaxException, IOException {
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
-        return new String(Files.readAllBytes(path));
+    @BeforeEach
+    public void setup(){
+        vertxMock = mock(Vertx.class);
     }
 
     @Test
@@ -134,7 +136,7 @@ public abstract class ProcessSvgServiceTest {
     }
 
     @Test
-    public void getProcessSVGFromVertxFileSystemTest() throws Exception {
+    public void getProcessSvgFromFileSystemTest() throws Exception {
         FileSystem fileSystemMock = mock(FileSystem.class);
         Buffer bufferMock = mock(Buffer.class);
         String fileContent = getTravelsSVGFile();
@@ -170,15 +172,15 @@ public abstract class ProcessSvgServiceTest {
     public void fillNodesArraysTest() {
         HttpResponse response = mock(HttpResponse.class);
         List<String> completedNodes = new ArrayList<>();
-        List<String> activedNodes = new ArrayList<>();
+        List<String> activeNodes = new ArrayList<>();
 
         lenient().when(response.statusCode()).thenReturn(200);
         lenient().when(response.bodyAsJsonObject()).thenReturn(new JsonObject(jsonString));
 
-        getTestedProcessSvgService().fillNodeArrays(response, completedNodes, activedNodes);
+        getTestedProcessSvgService().fillNodeArrays(response, completedNodes, activeNodes);
 
         assertThat(completedNodes.size()).isEqualTo(8);
-        assertThat(activedNodes.size()).isEqualTo(1);
+        assertThat(activeNodes.size()).isEqualTo(1);
     }
 
     public String getTravelsSVGFile() {
@@ -187,6 +189,11 @@ public abstract class ProcessSvgServiceTest {
         } catch (Exception e) {
             return "No svg found";
         }
+    }
+
+    public static String readFileContent(String file) throws URISyntaxException, IOException {
+        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
+        return new String(Files.readAllBytes(path));
     }
 
     protected abstract ProcessSvgService getTestedProcessSvgService();

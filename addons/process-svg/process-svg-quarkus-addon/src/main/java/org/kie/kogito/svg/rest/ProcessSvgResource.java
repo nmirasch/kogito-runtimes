@@ -16,6 +16,8 @@
 
 package org.kie.kogito.svg.rest;
 
+import java.io.IOException;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -38,7 +40,7 @@ public class ProcessSvgResource {
     @GET
     @Produces(MediaType.APPLICATION_SVG_XML)
     public String getProcessSvg(
-            @PathParam("processId") String processId) {
+            @PathParam("processId") String processId) throws IOException {
         return service.getProcessSvg(processId);
     }
 
@@ -47,7 +49,7 @@ public class ProcessSvgResource {
     @Produces(MediaType.APPLICATION_SVG_XML)
     public Uni<String> getExecutionPathByProcessInstanceId(
             @PathParam("processId") String processId,
-            @PathParam("processInstanceId") String processInstanceId) {
+            @PathParam("processInstanceId") String processInstanceId) throws IOException {
         return service.getProcessInstanceSvg(processId, processInstanceId);
     }
 

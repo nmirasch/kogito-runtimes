@@ -43,11 +43,6 @@ class ProcessSvgResourceTest {
     private QuarkusProcessSvgService processSvgServiceMock;
     private HttpResponse responseMock;
 
-    public static String readFileContent(String file) throws URISyntaxException, IOException {
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
-        return new String(Files.readAllBytes(path));
-    }
-
     @BeforeAll
     public void setup() {
         processSvgResourceTest = new ProcessSvgResource();
@@ -60,18 +55,14 @@ class ProcessSvgResourceTest {
     }
 
     @Test
-    void getSVGExecutionPathByProcessInstanceTest() {
+    void getProcessSvgTest() throws IOException {
+        processSvgResourceTest.getProcessSvg(PROCESS_ID);
+        verify(processSvgServiceMock).getProcessSvg(PROCESS_ID);
+    }
+
+    @Test
+    void getExecutionPathByProcessInstanceIdTest() throws IOException {
         processSvgResourceTest.getExecutionPathByProcessInstanceId(PROCESS_ID, PROCESS_INSTANCE_ID);
         verify(processSvgServiceMock).getProcessInstanceSvg(PROCESS_ID, PROCESS_INSTANCE_ID);
     }
-/*
-    public String getTravelsSvgFile() {
-        try {
-            return readFileContent("travels.svg");
-        } catch (Exception e) {
-            return "No svg found";
-        }
-    }
-
- */
 }

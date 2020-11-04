@@ -16,16 +16,21 @@
 
 package org.kie.kogito.svg;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonArray;
@@ -35,8 +40,7 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
-import org.jbpm.process.svg.SVGImageProcessor;
-import org.jbpm.process.svg.processor.SVGProcessor;
+import org.kie.kogito.svg.processor.SVGProcessor;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
@@ -72,7 +76,7 @@ public abstract class ProcessSvgService {
                 .sendJson(JsonObject.mapFrom(Collections.singletonMap("query", query)));
     }
 
-    public String getProcessSvg(String processId) {
+    public String getProcessSvg(String processId) throws IOException {
         try {
             return vertx.fileSystem()
                     .readFileBlocking(svgResourcesPath + "/" + processId + ".svg")
@@ -82,20 +86,29 @@ public abstract class ProcessSvgService {
         }
     }
 
-    private String readFileContentFromClassPath(String fileName) {
-        try {
-            Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(fileName).toURI());
-            return new String(Files.readAllBytes(path));
-        } catch (Exception e) {
-            return "";
+    private String readFileContentFromClassPath(String fileName) throws IOException {
+        Path svgFile = svgDir.resolve(fileName);
+        try (
+            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(svgFile.toString());
+            BufferedInputStream bis = new BufferedInputStream(inputStream);
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            ) {
+            Objects.requireNonNull(inputStream, "Could not resolve file path: " + svgFile.toString());
+            int result = bis.read();
+            while (result != -1) {
+                buf.write((byte) result);
+                result = bis.read();
+            }
+            return buf.toString(StandardCharsets.UTF_8.name());
+        } catch (Exception exception) {
+            throw new FileNotFoundException();
         }
     }
 
     public String annotateExecutedPath(String svg, List<String> completedNodes, List<String> activeNodes) {
         if (svg != null && !svg.isEmpty()) {
             if (!(completedNodes.isEmpty() && activeNodes.isEmpty())) {
-                try {
-                    InputStream svgStream = new ByteArrayInputStream(svg.getBytes());
+                try (InputStream svgStream = new ByteArrayInputStream(svg.getBytes())) {
                     SVGProcessor processor = new SVGImageProcessor(svgStream).getProcessor();
                     completedNodes.forEach(nodeId -> processor.defaultCompletedTransformation(nodeId, completedColor, completedBorderColor));
                     activeNodes.forEach(nodeId -> processor.defaultActiveTransformation(nodeId, activeBorderColor));
@@ -136,11 +149,11 @@ public abstract class ProcessSvgService {
                     .setDefaultPort(dataIndexURL.getPort())
                     .addEnabledSecureTransportProtocol(dataIndexURL.getProtocol());
         } catch (MalformedURLException malformedURLException) {
+            return null;
         }
-        return null;
     }
 
-    public Uni<String> getProcessInstanceSvg(String processId, String processInstanceId) {
+    public Uni<String> getProcessInstanceSvg(String processId, String processInstanceId) throws IOException {
         Uni<HttpResponse<Buffer>> queryNodesUni = getNodesQueryUni(processId, processInstanceId);
         String svg = getProcessSvg(processId);
         return queryNodesUni.onItem().transform(queryResults -> {
