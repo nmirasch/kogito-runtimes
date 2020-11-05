@@ -16,11 +16,11 @@
 package org.kie.kogito.svg;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
 
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -43,13 +43,17 @@ public class SvgTransformationTest {
 
     private XPath xpath = XPathFactory.newInstance().newXPath();
 
+    public static InputStream readTestFileContent() {
+        return SvgTransformationTest.class.getResourceAsStream("/META-INF/processSVG/travels.svg");
+    }
+
     @Test
     public void transformTest() throws Exception {
         List<String> completed = new ArrayList<String>();
         completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
         List<String> active = new ArrayList<String>();
         active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"), completed, active);
+        String svg = SVGImageProcessor.transform(readTestFileContent(), completed, active);
 
         // verify transformation
         Document svgDocument = readSVG(svg);
@@ -64,7 +68,7 @@ public class SvgTransformationTest {
         completed.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
         List<String> active = new ArrayList<String>();
         active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"), completed, active);
+        String svg = SVGImageProcessor.transform(readTestFileContent(), completed, active);
 
         // verify transformation
         Document svgDocument = readSVG(svg);
@@ -83,7 +87,7 @@ public class SvgTransformationTest {
         completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
         List<String> active = new ArrayList<String>();
         active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"),
+        String svg = SVGImageProcessor.transform(readTestFileContent(),
                                                  completed, active, null, completedNodeColor,
                                                  completedNodeBorderColor, activeNodeBorderColor);
 
@@ -93,13 +97,15 @@ public class SvgTransformationTest {
         validateNodesMarkedAsCompleted(svgDocument, completed, completedNodeColor);
     }
 
+    // helper methods for verifying svg transformation
+
     @Test
     public void testViewBoxAttributeAddition() throws Exception {
         List<String> completed = new ArrayList<String>();
         completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
         List<String> active = new ArrayList<String>();
         active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"),
+        String svg = SVGImageProcessor.transform(readTestFileContent(),
                                                  completed, active, null, "#888888",
                                                  "#888887", "#888886");
 
@@ -108,8 +114,6 @@ public class SvgTransformationTest {
         assertEquals("", ((Element) svgDocument.getFirstChild()).getAttribute("height"));
         assertEquals("0 0 1748 632", svgDocument.getFirstChild().getAttributes().getNamedItem("viewBox").getNodeValue());
     }
-
-    // helper methods for verifying svg transformation
 
     private void validateNodesMarkedAsActive(Document svgDocument, List<String> activeNodes, String activeNodeBorderColor) throws XPathExpressionException {
         for (String activeNode : activeNodes) {
@@ -148,31 +152,6 @@ public class SvgTransformationTest {
             String marker = background.getAttribute("fill");
             assertNotNull(marker);
             assertEquals(completedNodeColor, marker);
-        }
-    }
-
-    private void validateCallActivityLinked(Document svgDocument, List<String> activeNodes, Map<String, String> links) throws XPathExpressionException {
-        for (String activeNode : activeNodes) {
-
-            XPathExpression expr = xpath.compile("//*[@bpmn2nodeid='" + activeNode + "']");
-            Element element = (Element) expr.evaluate(svgDocument, XPathConstants.NODE);
-
-            if (element == null) {
-                fail("Active element " + activeNode + " not found in the document");
-            }
-            String svgId = element.getAttribute("id");
-
-            Element border = svgDocument.getElementById(svgId + "pimg");
-
-            String onclick = border.getAttribute("onclick");
-            assertNotNull(onclick);
-            assertEquals("", onclick);
-            String link = border.getAttributeNS("http://www.w3.org/1999/xlink", "href");
-            assertNotNull(link);
-            assertEquals(links.get(activeNode), link);
-            String target = border.getAttribute("target");
-            assertNotNull(target);
-            assertEquals("_blank", target);
         }
     }
 

@@ -16,7 +16,9 @@
 
 package org.kie.kogito.svg;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.Test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -103,8 +106,13 @@ public abstract class ProcessSvgServiceTest {
     protected Vertx vertxMock;
     protected String dataIndexURL = "http://localhost:8180";
 
+    public static String readFileContent(String file) throws URISyntaxException, IOException {
+        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
+        return new String(Files.readAllBytes(path));
+    }
+
     @BeforeEach
-    public void setup(){
+    public void setup() {
         vertxMock = mock(Vertx.class);
     }
 
@@ -183,17 +191,18 @@ public abstract class ProcessSvgServiceTest {
         assertThat(activeNodes.size()).isEqualTo(1);
     }
 
+    @Test
+    public void readFileFromClassPathTest() throws Exception {
+        assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(() -> getTestedProcessSvgService().readFileContentFromClassPath("undefined"));
+        assertThat(getTravelsSVGFile()).isEqualTo(getTestedProcessSvgService().readFileContentFromClassPath("travels.svg"));
+    }
+
     public String getTravelsSVGFile() {
         try {
-            return readFileContent("travels.svg");
+            return readFileContent("META-INF/processSVG/travels.svg");
         } catch (Exception e) {
             return "No svg found";
         }
-    }
-
-    public static String readFileContent(String file) throws URISyntaxException, IOException {
-        Path path = Paths.get(Thread.currentThread().getContextClassLoader().getResource(file).toURI());
-        return new String(Files.readAllBytes(path));
     }
 
     protected abstract ProcessSvgService getTestedProcessSvgService();

@@ -18,6 +18,7 @@ package org.kie.kogito.svg.processor;
 
 import java.io.StringWriter;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -52,6 +53,8 @@ public abstract class AbstractSVGProcessor implements SVGProcessor {
             StringWriter writer = new StringWriter();
             StreamResult result = new StreamResult(writer);
             TransformerFactory transformerFactory = javax.xml.transform.TransformerFactory.newInstance();
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
             Transformer transformer = transformerFactory.newTransformer();
             ((Element) svgDocument.getFirstChild()).setAttribute("viewBox", "0 0 " +
                     ((Element) svgDocument.getFirstChild()).getAttribute("width") + " " +

@@ -86,13 +86,13 @@ public abstract class ProcessSvgService {
         }
     }
 
-    private String readFileContentFromClassPath(String fileName) throws IOException {
+    protected String readFileContentFromClassPath(String fileName) throws IOException {
         Path svgFile = svgDir.resolve(fileName);
         try (
-            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(svgFile.toString());
-            BufferedInputStream bis = new BufferedInputStream(inputStream);
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            ) {
+                InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(svgFile.toString());
+                BufferedInputStream bis = new BufferedInputStream(inputStream);
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        ) {
             Objects.requireNonNull(inputStream, "Could not resolve file path: " + svgFile.toString());
             int result = bis.read();
             while (result != -1) {
