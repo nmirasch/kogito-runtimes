@@ -33,9 +33,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class StunnerSVGProcessor extends AbstractSVGProcessor {
+public class DefaultSVGProcessor extends AbstractSVGProcessor {
 
-    public StunnerSVGProcessor(Document svgDocument) {
+    public DefaultSVGProcessor(Document svgDocument) {
         super(svgDocument, true);
     }
 

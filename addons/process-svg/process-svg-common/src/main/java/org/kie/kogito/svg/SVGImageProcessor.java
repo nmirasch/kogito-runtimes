@@ -36,10 +36,6 @@ public class SVGImageProcessor {
     private SVGProcessor svgProcessor;
 
     public SVGImageProcessor(InputStream svg) {
-        this(svg, true);
-    }
-
-    public SVGImageProcessor(InputStream svg, boolean mapById) {
 
         try {
             String parser = XMLResourceDescriptor.getXMLParserClassName();
@@ -47,7 +43,7 @@ public class SVGImageProcessor {
             factory.setValidating(false);
             Document svgDocument = factory.createDocument("http://jbpm.org", svg);
 
-            svgProcessor = new SVGProcessorFactory().create(svgDocument, mapById);
+            svgProcessor = new SVGProcessorFactory().create(svgDocument);
             svgProcessor.processNodes(svgDocument.getChildNodes());
         } catch (IOException e) {
             throw new RuntimeException("Could not parse svg", e);
@@ -83,19 +79,6 @@ public class SVGImageProcessor {
             for (Map.Entry<String, String> subProcessLink : subProcessLinks.entrySet()) {
                 processor.defaultSubProcessLinkTransformation(subProcessLink.getKey(), subProcessLink.getValue());
             }
-        }
-        return processor.getSVG();
-    }
-
-    public static String transformByName(InputStream svg, List<String> completed, List<String> active) {
-        SVGProcessor processor = new SVGImageProcessor(svg, false).getProcessor();
-        for (String nodeId : completed) {
-            if (!active.contains(nodeId)) {
-                processor.defaultCompletedTransformation(nodeId);
-            }
-        }
-        for (String nodeId : active) {
-            processor.defaultActiveTransformation(nodeId);
         }
         return processor.getSVG();
     }

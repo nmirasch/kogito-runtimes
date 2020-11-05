@@ -44,69 +44,34 @@ public class SvgTransformationTest {
     private XPath xpath = XPathFactory.newInstance().newXPath();
 
     @Test
-    public void test() throws Exception {
+    public void transformTest() throws Exception {
         List<String> completed = new ArrayList<String>();
-        completed.add("_343B16DA-961A-49BF-8697-9A86DEAFBAF4");
+        completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
         List<String> active = new ArrayList<String>();
-        active.add("_6063D302-9D81-4C86-920B-E808A45377C2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/evaluation-svg.svg"), completed, active);
+        active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
+        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"), completed, active);
 
         // verify transformation
         Document svgDocument = readSVG(svg);
         validateNodesMarkedAsActive(svgDocument, active, SVGProcessor.ACTIVE_BORDER_COLOR);
         validateNodesMarkedAsCompleted(svgDocument, completed, SVGProcessor.COMPLETED_COLOR);
-    }
-
-    @Test
-    public void testByName() throws Exception {
-        List<String> completedID = new ArrayList<String>();
-        completedID.add("_6063D302-9D81-4C86-920B-E808A45377C2");
-        List<String> activeID = new ArrayList<String>();
-        activeID.add("_AE5BF0DC-B720-4FDE-9499-5ED89D41FB1A");
-
-        List<String> completed = new ArrayList<String>();
-        completed.add("Self Evaluation");
-        List<String> active = new ArrayList<String>();
-        active.add("PM Evaluation");
-        String svg = SVGImageProcessor.transformByName(SvgTransformationTest.class.getResourceAsStream("/evaluation-svg.svg"), completed, active);
-
-        // verify transformation
-        Document svgDocument = readSVG(svg);
-        validateNodesMarkedAsActive(svgDocument, activeID, SVGProcessor.ACTIVE_BORDER_COLOR);
-        validateNodesMarkedAsCompleted(svgDocument, completedID, SVGProcessor.COMPLETED_COLOR);
     }
 
     @Test
     public void testCompletedAndActive() throws Exception {
         List<String> completed = new ArrayList<String>();
-        completed.add("_343B16DA-961A-49BF-8697-9A86DEAFBAF4");
-        completed.add("_6063D302-9D81-4C86-920B-E808A45377C2");
+        completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
+        completed.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
         List<String> active = new ArrayList<String>();
-        active.add("_6063D302-9D81-4C86-920B-E808A45377C2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/evaluation-svg.svg"), completed, active);
+        active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
+        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"), completed, active);
 
         // verify transformation
         Document svgDocument = readSVG(svg);
         validateNodesMarkedAsActive(svgDocument, active, SVGProcessor.ACTIVE_BORDER_COLOR);
         // remove it as it should be not considered completed and was already asserted as active
-        completed.remove("_6063D302-9D81-4C86-920B-E808A45377C2");
+        completed.remove("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
         validateNodesMarkedAsCompleted(svgDocument, completed, SVGProcessor.COMPLETED_COLOR);
-    }
-
-    @Test
-    public void testSubProcessLink() throws Exception {
-        List<String> completed = new ArrayList<String>();
-        List<String> active = new ArrayList<String>();
-        active.add("_35262208-8B3E-457E-8D8A-798E70CC280D");
-
-        Map<String, String> links = new HashMap<>();
-        links.put("_35262208-8B3E-457E-8D8A-798E70CC280D", "http://localhost/processes/1");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/call-activity-svg.svg"), completed, active, links);
-
-        // verify transformation
-        Document svgDocument = readSVG(svg);
-        validateNodesMarkedAsActive(svgDocument, active, SVGProcessor.ACTIVE_BORDER_COLOR);
-        validateCallActivityLinked(svgDocument, active, links);
     }
 
     @Test
@@ -115,10 +80,10 @@ public class SvgTransformationTest {
         String completedNodeBorderColor = "#888887";
         String activeNodeBorderColor = "#888886";
         List<String> completed = new ArrayList<String>();
-        completed.add("_343B16DA-961A-49BF-8697-9A86DEAFBAF4");
+        completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
         List<String> active = new ArrayList<String>();
-        active.add("_6063D302-9D81-4C86-920B-E808A45377C2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/evaluation-svg.svg"),
+        active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
+        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"),
                                                  completed, active, null, completedNodeColor,
                                                  completedNodeBorderColor, activeNodeBorderColor);
 
@@ -131,17 +96,17 @@ public class SvgTransformationTest {
     @Test
     public void testViewBoxAttributeAddition() throws Exception {
         List<String> completed = new ArrayList<String>();
-        completed.add("_343B16DA-961A-49BF-8697-9A86DEAFBAF4");
+        completed.add("_1A708F87-11C0-42A0-A464-0B7E259C426F");
         List<String> active = new ArrayList<String>();
-        active.add("_6063D302-9D81-4C86-920B-E808A45377C2");
-        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/evaluation-svg.svg"),
+        active.add("_24FBB8D6-EF2D-4DCC-846D-D8C5E21849D2");
+        String svg = SVGImageProcessor.transform(SvgTransformationTest.class.getResourceAsStream("/travels.svg"),
                                                  completed, active, null, "#888888",
                                                  "#888887", "#888886");
 
         Document svgDocument = readSVG(svg);
         assertEquals("", ((Element) svgDocument.getFirstChild()).getAttribute("width"));
         assertEquals("", ((Element) svgDocument.getFirstChild()).getAttribute("height"));
-        assertEquals("0 0 3000 2000", svgDocument.getFirstChild().getAttributes().getNamedItem("viewBox").getNodeValue());
+        assertEquals("0 0 1748 632", svgDocument.getFirstChild().getAttributes().getNamedItem("viewBox").getNodeValue());
     }
 
     // helper methods for verifying svg transformation
@@ -157,7 +122,7 @@ public class SvgTransformationTest {
             }
             String svgId = element.getAttribute("id");
 
-            Element border = svgDocument.getElementById(svgId + "bg_frame");
+            Element border = svgDocument.getElementById(svgId + "?shapeType=BORDER&renderType=STROKE");
 
             String marker = border.getAttribute("stroke");
             assertNotNull(marker);
@@ -178,9 +143,9 @@ public class SvgTransformationTest {
                 fail("Completed element " + completedNode + " not found in the document");
             }
             String svgId = element.getAttribute("id");
-            Element background = svgDocument.getElementById(svgId + "fill_el");
+            Element background = svgDocument.getElementById(svgId + "?shapeType=BACKGROUND");
 
-            String marker = background.getAttribute("stop-color");
+            String marker = background.getAttribute("fill");
             assertNotNull(marker);
             assertEquals(completedNodeColor, marker);
         }
